@@ -1,8 +1,9 @@
-import { z } from "zod";
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+import {z} from "zod";
 
 /**
- * Specify your server-side environment variables schema here. This way you can ensure the app isn't
- * built with invalid env vars.
+ * Specify your server-side environment variables schema here.
+ * This way you can ensure the app isn't built with invalid env vars.
  */
 const server = z.object({
   DATABASE_URL: z.string().url(),
@@ -21,20 +22,33 @@ const server = z.object({
   // Add `.min(1) on ID and SECRET if you want to make sure they're not empty
   DISCORD_CLIENT_ID: z.string(),
   DISCORD_CLIENT_SECRET: z.string(),
+  GOOGLE_CLIENT_ID: z.string(),
+  GOOGLE_CLIENT_SECRET: z.string(),
+  GITHUB_CLIENT_ID: z.string(),
+  GITHUB_CLIENT_SECRET: z.string(),
+  MINIO_ENDPOINT: z.string(),
+  MINIO_ACCESS_KEY: z.string(),
+  MINIO_ACCESS_SECRET: z.string(),
+  MINIO_BUCKET_NAME: z.string(),
+  SMTP_HOST: z.string(),
+  SMTP_PORT: z.string(),
+  SMTP_USERNAME: z.string(),
+  SMTP_PASSWORD: z.string(),
+  SMTP_FROM: z.string(),
 });
 
 /**
- * Specify your client-side environment variables schema here. This way you can ensure the app isn't
- * built with invalid env vars. To expose them to the client, prefix them with `NEXT_PUBLIC_`.
+ * Specify your client-side environment variables schema here.
+ * This way you can ensure the app isn't built with invalid env vars.
+ * To expose them to the client, prefix them with `NEXT_PUBLIC_`.
  */
 const client = z.object({
   // NEXT_PUBLIC_CLIENTVAR: z.string().min(1),
 });
 
 /**
- * You can't destruct `process.env` as a regular object in the Next.js edge runtimes (e.g.
- * middlewares) or client-side so we need to destruct manually.
- *
+ * You can't destruct `process.env` as a regular object in the Next.js
+ * edge runtimes (e.g. middlewares) or client-side so we need to destruct manually.
  * @type {Record<keyof z.infer<typeof server> | keyof z.infer<typeof client>, string | undefined>}
  */
 const processEnv = {
@@ -45,27 +59,35 @@ const processEnv = {
   DISCORD_CLIENT_ID: process.env.DISCORD_CLIENT_ID,
   DISCORD_CLIENT_SECRET: process.env.DISCORD_CLIENT_SECRET,
   // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
+  MINIO_ENDPOINT: process.env.MINIO_ENDPOINT,
+  MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
+  MINIO_ACCESS_SECRET: process.env.MINIO_ACCESS_SECRET,
+  MINIO_BUCKET_NAME: process.env.MINIO_BUCKET_NAME,
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+  GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID,
+  GITHUB_CLIENT_SECRET: process.env.GITHUB_CLIENT_SECRET,
+  SMTP_HOST: process.env.SMTP_HOST,
+  SMTP_PORT: process.env.SMTP_PORT,
+  SMTP_USERNAME: process.env.SMTP_USERNAME,
+  SMTP_PASSWORD: process.env.SMTP_PASSWORD,
+  SMTP_FROM: process.env.SMTP_FROM,
 };
 
 // Don't touch the part below
 // --------------------------
 
 const merged = server.merge(client);
+/** @type z.infer<merged>
+ *  @ts-ignore - can't type this properly in jsdoc */
+let env = process.env;
 
-/** @typedef {z.input<typeof merged>} MergedInput */
-/** @typedef {z.infer<typeof merged>} MergedOutput */
-/** @typedef {z.SafeParseReturnType<MergedInput, MergedOutput>} MergedSafeParseReturn */
-
-let env = /** @type {MergedOutput} */ (process.env);
-
-if (!!process.env.SKIP_ENV_VALIDATION == false) {
+if (!!process.env.SKIP_ENV_VALIDATION === false) {
   const isServer = typeof window === "undefined";
 
-  const parsed = /** @type {MergedSafeParseReturn} */ (
-    isServer
-      ? merged.safeParse(processEnv) // on server we can validate all env vars
-      : client.safeParse(processEnv) // on client we can only validate the ones that are exposed
-  );
+  const parsed = isServer
+    ? merged.safeParse(processEnv) // on server we can validate all env vars
+    : client.safeParse(processEnv); // on client we can only validate the ones that are exposed
 
   if (parsed.success === false) {
     console.error(
@@ -75,6 +97,8 @@ if (!!process.env.SKIP_ENV_VALIDATION == false) {
     throw new Error("Invalid environment variables");
   }
 
+  /** @type z.infer<merged>
+   *  @ts-ignore - can't type this properly in jsdoc */
   env = new Proxy(parsed.data, {
     get(target, prop) {
       if (typeof prop !== "string") return undefined;
@@ -86,7 +110,8 @@ if (!!process.env.SKIP_ENV_VALIDATION == false) {
             ? "❌ Attempted to access a server-side environment variable on the client"
             : `❌ Attempted to access server-side environment variable '${prop}' on the client`,
         );
-      return target[/** @type {keyof typeof target} */ (prop)];
+      /*  @ts-ignore - can't type this properly in jsdoc */
+      return target[prop];
     },
   });
 }
