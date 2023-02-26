@@ -24,7 +24,8 @@ const config = {
     domains: [
       'is3.cloudhost.id',
       'tailwindui.com',
-      'images.unsplash.com'
+      'images.unsplash.com',
+      'via.placeholder.com'
     ]
   },
 };

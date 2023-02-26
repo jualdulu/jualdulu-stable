@@ -7,17 +7,23 @@
     "dev": "next dev",
     "postinstall": "prisma generate",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "studio": "yarn prisma studio"
   },
   "dependencies": {
+    "@headlessui/react": "^1.7.12",
+    "@heroicons/react": "^2.0.16",
     "@next-auth/prisma-adapter": "^1.0.5",
     "@prisma/client": "^4.9.0",
+    "@tailwindcss/aspect-ratio": "^0.4.2",
+    "@tailwindcss/forms": "^0.5.3",
     "@tanstack/react-query": "^4.20.2",
     "@trpc/client": "^10.9.0",
     "@trpc/next": "^10.9.0",
     "@trpc/react-query": "^10.9.0",
     "@trpc/server": "^10.9.0",
     "classnames": "^2.3.2",
+    "minio": "^7.0.32",
     "next": "13.1.6",
     "next-auth": "^4.19.0",
     "nodemailer": "^6.9.1",
@@ -28,7 +34,8 @@
   },
   "devDependencies": {
     "@types/eslint": "^8.21.1",
-    "@types/node": "^18.11.18",
+    "@types/minio": "^7.0.15",
+    "@types/node": "^18.14.1",
     "@types/prettier": "^2.7.2",
     "@types/react": "^18.0.26",
     "@types/react-dom": "^18.0.10",
@@ -42,9 +49,13 @@
     "prettier-plugin-tailwindcss": "^0.2.1",
     "prisma": "^4.9.0",
     "tailwindcss": "^3.2.0",
-    "typescript": "^4.9.4"
+    "ts-node": "^10.9.1",
+    "typescript": "^4.9.5"
   },
   "ct3aMetadata": {
     "initVersion": "7.5.6"
+  },
+  "prisma": {
+    "seed": "node ./prisma/seed.mjs"
   }
 }

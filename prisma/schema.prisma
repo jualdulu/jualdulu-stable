@@ -50,20 +50,25 @@ model Session {
 enum Role {
   PUBLIC
   DROPSHIPER
+  SUPPLIER
   INSTRUCTOR
   ADMIN
   SUPERADMIN
 }
 
 model User {
-  id            String    @id @default(cuid())
+  id            String        @id @default(cuid())
   name          String?
-  email         String?   @unique
+  email         String?       @unique
   emailVerified DateTime?
   image         String?
-  role          Role?     @default(PUBLIC)
+  role          Role?         @default(PUBLIC)
   accounts      Account[]
   sessions      Session[]
+  contacts      Contact[]
+  orders        Order[]
+  products      Product[]
+  bankAccounts  BankAccount[]
 }
 
 model VerificationToken {
@@ -72,4 +77,104 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+enum ContactType {
+  CUSTOMER
+  DROPSHIPER
+  SUPPLIER
+  INSTRUCTOR
+  ADMIN
+}
+
+model Contact {
+  id         String      @id @default(cuid())
+  type       ContactType
+  firstName  String
+  lastName   String?
+  email      String?
+  phone      String
+  facebook   String?
+  address    String?     @db.Text
+  province   String?
+  city       String?
+  district   String?
+  postalCode String?
+  userId     String
+  user       User        @relation(fields: [userId], references: [id])
+}
+
+model Product {
+  id          String           @id @default(cuid())
+  code        String
+  userId      String?
+  user        User?            @relation(fields: [userId], references: [id])
+  name        String
+  description String           @db.Text
+  images      String[]
+  variants    ProductVariant[]
+}
+
+model ProductVariant {
+  id            String   @id @default(cuid())
+  productId     String
+  product       Product  @relation(fields: [productId], references: [id])
+  name          String?  @default("default")
+  value         String?  @default("default")
+  image         String?
+  sku           String?
+  price         Decimal // Default selling price
+  discountPrice Decimal? // Product price after discount
+  sellingPrice  Decimal? // Dropshiper can sell this product with this price
+  stock         Decimal? @default(0)
+  weight        Decimal
+}
+
+enum OrderStatus {
+  AWAITING_PAYMENT // Waiting for payment
+  AWAITING_CONFIRMATION // Waiting suppier confirmation
+  PROCESSING // Process by supplier
+  SHIPPED // On shiping
+  DELIVERED // Delivered to customer
+  COMPLETED // Confirmed by dropshiper
+  COMPLAINT // Complain by dropshiper
+  RETURN // Order returned
+  CANCEL // Order canceled
+}
+
+model Order {
+  id       String      @id @default(cuid())
+  code     String
+  date     DateTime
+  userId   String
+  user     User        @relation(fields: [userId], references: [id])
+  amount   Decimal
+  discount Decimal?
+  status   OrderStatus
+  items    OrderItem[]
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id])
+  productId   String
+  productName String
+  quantity    Decimal? @default(1)
+  price       Decimal
+}
+
+model BankAccount {
+  id            String  @id @default(cuid())
+  userId        String?
+  user          User?   @relation(fields: [userId], references: [id])
+  name          String
+  bankName      String
+  bankCode      String?
+  accountNumber String
+}
+
+model Setting {
+  key   String @unique
+  value String
 }
