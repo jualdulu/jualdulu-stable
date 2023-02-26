@@ -18,60 +18,70 @@ export const userRouter = createTRPCRouter({
     district: z.string().optional(),
     postalCode: z.string().optional(),
   })).mutation(async ({ctx, input}) => {
-    const {image, email, firstName, lastName, phone, facebook, province, city, district, postalCode, address} = input;
-    // Update user info
-    await ctx.prisma.user.update({where: {id: ctx.session.user.id}, data: {
-      name: `${firstName} ${lastName}`,
-      image,
-      email,
-      role: 'PUBLIC',
-    }})
-    // Create user contact
-    await ctx.prisma.contact.create({
-      data: {
-        type: 'DROPSHIPER',
-        firstName,
-        lastName,
-        email,
-        phone,
-        facebook,
-        address,
-        province,
-        city,
-        district,
-        postalCode,
-        userId: ctx.session.user.id,
-      }
-    })
-    const setting = await ctx.prisma.setting.findUnique({where: {key: 'dropshiper-registration-product-id'}});
-    const product = await ctx.prisma.product.findUnique({where: {id: setting?.value}, include: {variants: true}});
-    if (!product || !product.variants[0]) return {
-      code: 404,
-      message: "product not found"
-    }
-    // Create new transaction
-    const order = await ctx.prisma.order.create({
-      data: {
-        userId: ctx.session.user.id,
-        date: new Date(),
-        code: code.generate(),
-        amount: product.variants[0].discountPrice || product.variants[0].price,
-        status: 'AWAITING_PAYMENT',
-        items: {
-          create: [
-            {
-              productId: product.id,
-              productName: product.name,
-              price: product.variants[0].discountPrice || product.variants[0].price,
-              quantity: 1
-            }
-          ]
+    try {
+      const {image, email, firstName, lastName, phone, facebook, province, city, district, postalCode, address} = input;
+      // Update user info
+      await ctx.prisma.user.update({
+        where: {id: ctx.session.user.id}, data: {
+          name: `${firstName} ${lastName}`,
+          image,
+          email,
+          role: 'PUBLIC',
         }
+      })
+      // Create user contact
+      await ctx.prisma.contact.create({
+        data: {
+          type: 'DROPSHIPER',
+          firstName,
+          lastName,
+          email,
+          phone,
+          facebook,
+          address,
+          province,
+          city,
+          district,
+          postalCode,
+          userId: ctx.session.user.id,
+        }
+      })
+      const setting = await ctx.prisma.setting.findUnique({where: {key: 'dropshiper-registration-product-id'}});
+      const product = await ctx.prisma.product.findUnique({where: {id: setting?.value}, include: {variants: true}});
+      if (!product || !product.variants[0]) return {
+        code: 404,
+        message: "product not found"
       }
-    })
-    return {
-      code: 201,
-      data: order,
-    };
+      // Create new transaction
+      const order = await ctx.prisma.order.create({
+        data: {
+          userId: ctx.session.user.id,
+          date: new Date(),
+          code: code.generate(),
+          amount: product.variants[0].discountPrice || product.variants[0].price,
+          status: 'AWAITING_PAYMENT',
+          items: {
+            create: [
+              {
+                productId: product.id,
+                productName: product.name,
+                price: product.variants[0].discountPrice || product.variants[0].price,
+                quantity: 1
+              }
+            ]
+          }
+        }
+      })
+      return {
+        code: 201,
+        data: order,
+      };
+    } catch (error) {
+      console.error(error);
+      return {
+        code: 500,
+        message: 'internal server error',
+      }
+    }
   }),
 });
