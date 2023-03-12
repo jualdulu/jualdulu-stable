@@ -2,6 +2,8 @@ import {useRouter} from "next/router";
 import {api} from "~/utils/api";
 import {currency} from "~/utils/formater";
 import Image from "next/image";
+import React from "react";
+import PublicLayout from "~/components/templates/PublicLayout";
 
 export default function Payment() {
   const router = useRouter();
@@ -86,5 +88,13 @@ export default function Payment() {
         </div>
       </div>
     </div>
+  )
+}
+
+Payment.getLayout = function getLayout(page: React.ReactNode) {
+  return (
+    <PublicLayout>
+      {page}
+    </PublicLayout>
   )
 }
